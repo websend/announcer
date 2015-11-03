@@ -12,14 +12,14 @@ module Announcer
     def run
       Announcer.configure
 
-      jobs_response = RestClient::Resource.new("#{Announcer.configuration.jenkins_url}/api/json?tree=jobs[name,color]",
+      jobs_resource = RestClient::Resource.new("#{Announcer.configuration.jenkins_url}/api/json?tree=jobs[name,color]",
                                                   Announcer.configuration.github_username,
-                                                  Announcer.configuration.github_access_token).get
+                                                  Announcer.configuration.github_access_token)
 
       jobs = {}
 
       loop do
-        response = JSON.parse(jobs_response)
+        response = JSON.parse(jobs_resource.get)
 
         response["jobs"].each do |job|
           previous_job = jobs[job["name"]]
