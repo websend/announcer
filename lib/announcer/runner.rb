@@ -68,6 +68,8 @@ module Announcer
                                           Announcer.configuration.github_access_token).get
       culprits = JSON.parse(response)
       culprits["culprits"].first["fullName"]
+    rescue
+      "Jan met de korte achternaam"
     end
 
     def announce_failure(job)
