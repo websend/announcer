@@ -19,26 +19,33 @@ module Announcer
       jobs = {}
 
       loop do
-        response = JSON.parse(jobs_resource.get)
+        begin
+          response = JSON.parse(jobs_resource.get)
 
-        response["jobs"].each do |job|
-          previous_job = jobs[job["name"]]
+          response["jobs"].each do |job|
+            previous_job = jobs[job["name"]]
 
-          if previous_job
-            if job_has_failed?(previous_job, job)
-              announce_failure(job)
-            elsif job_has_started?(previous_job, job)
-              announce_build_started(job)
+            if previous_job
+              if job_has_failed?(previous_job, job)
+                announce_failure(job)
+              elsif job_has_started?(previous_job, job)
+                announce_build_started(job)
+              end
+            else
+              if job_is_broken?(job)
+                announce_broken(job)
+              elsif job_has_started?(job)
+                announce_build_started(job)
+              end
             end
-          else
-            if job_is_broken?(job)
-              announce_broken(job)
-            elsif job_has_started?(job)
-              announce_build_started(job)
-            end
+
+            jobs[job["name"]] = Job.new(job["name"], job["color"])
           end
-
-          jobs[job["name"]] = Job.new(job["name"], job["color"])
+        rescue RestClient::ServerBrokeConnection => e
+          system "say -v xander Oh jee, de djenkins server geeft geen antwoord. Iemand moet even inloggen en de walldisplay verversen."
+          puts "Oh noes, no connection!"
+        rescue => e
+          puts "WTF! #{e}"
         end
 
         print "."
