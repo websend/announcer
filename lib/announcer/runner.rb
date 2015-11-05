@@ -70,11 +70,28 @@ module Announcer
     end
 
     def culprit(job)
-      response = RestClient::Resource.new("#{Announcer.configuration.jenkins_url}/job/#{job["name"]}/lastBuild/api/json?tree=culprits[fullName]",
+      response = RestClient::Resource.new("https://api.github.com/repos/websend/mother/commits",
                                           Announcer.configuration.github_username,
-                                          Announcer.configuration.github_access_token).get
-      culprits = JSON.parse(response)
-      culprits["culprits"].last["fullName"]
+                                          Announcer.configuration.github_access_token
+      ).get
+
+      commits = JSON.parse(response)
+
+      culprit_commit = nil
+      commits.each do |commit|
+        next if commit["parents"].count > 1
+        culprit_commit = commit
+        break
+      end
+
+      culprit_login = culprit_commit["author"]["login"]
+
+      user_response = RestClient::Resource.new("https://api.github.com/users/#{culprit_login}",
+                                          Announcer.configuration.github_username,
+                                          Announcer.configuration.github_access_token
+      ).get
+
+      JSON.parse(user_response)["name"]
     rescue
       "Jan met de korte achternaam"
     end
