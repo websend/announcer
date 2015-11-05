@@ -70,7 +70,7 @@ module Announcer
     end
 
     def culprit(job)
-      response = RestClient::Resource.new("https://api.github.com/repos/websend/mother/commits",
+      response = RestClient::Resource.new("https://api.github.com/repos/websend/#{job["name"]}/commits",
                                           Announcer.configuration.github_username,
                                           Announcer.configuration.github_access_token
       ).get
@@ -91,7 +91,8 @@ module Announcer
                                           Announcer.configuration.github_access_token
       ).get
 
-      JSON.parse(user_response)["name"]
+      name = JSON.parse(user_response)["name"]
+      name.nil? ? culprit_login : name
     rescue
       "Jan met de korte achternaam"
     end
